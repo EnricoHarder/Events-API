@@ -29,12 +29,25 @@ instance/
 
 # Database
 *.db
+*.db-journal
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .venv
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
 
 # IDE
 .vscode/
