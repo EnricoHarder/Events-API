@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
+# pyrefly: ignore [missing-import]
 from flask_jwt_extended import JWTManager
+# pyrefly: ignore [missing-import]
 from flask_swagger_ui import get_swaggerui_blueprint
 from config import Config
 from models import db
