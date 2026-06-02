@@ -9,6 +9,7 @@ from models import db
 from routes.auth import auth_bp
 from routes.events import events_bp
 from routes.rsvps import rsvps_bp
+from routes.polls import polls_bp
 import yaml
 import os
 
@@ -43,6 +44,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)
     app.register_blueprint(rsvps_bp)
+    app.register_blueprint(polls_bp)
     
     # Create tables
     with app.app_context():
@@ -73,6 +75,9 @@ def create_app():
                 'rsvps': {
                     'rsvp': '/api/rsvps/event/{event_id}',
                     'get_rsvps': '/api/rsvps/event/{event_id}'
+                },
+                'polls': {
+                    'create': '/api/polls'
                 }
             }
         }), 200
@@ -88,4 +93,3 @@ if __name__ == '__main__':
     app = create_app()
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
-

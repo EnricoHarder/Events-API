@@ -73,3 +73,36 @@ class RSVP(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+class Poll(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(255), nullable=False)
+    is_public = db.Column(db.Boolean, default=True, nullable=False)
+    requires_admin = db.Column(db.Boolean, default=False, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    options = db.relationship('PollOption', backref='poll', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'question': self.question,
+            'is_public': self.is_public,
+            'requires_admin': self.requires_admin,
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'options': [option.to_dict() for option in self.options]
+        }
+
+class PollOption(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(255), nullable=False)
+    poll_id = db.Column(db.Integer, db.ForeignKey('poll.id'), nullable=False)
+    votes = db.Column(db.Integer, default=0, nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'text': self.text,
+            'votes': self.votes
+        }
