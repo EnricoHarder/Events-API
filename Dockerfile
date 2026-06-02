@@ -22,11 +22,13 @@ COPY --from=builder /opt/venv /opt/venv
 # Activate the virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy the application code
-COPY . .
-
-# Create a non-root user and switch to it
+# Create a non-root user BEFORE copying the code
 RUN addgroup --system nonroot && adduser --system --ingroup nonroot nonroot
+
+# Copy the application code and give ownership to the nonroot user!
+COPY --chown=nonroot:nonroot . .
+
+# Now switch to the nonroot user
 USER nonroot
 
 # Expose the port the app runs on
@@ -36,5 +38,5 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
-# Run the application
-CMD ["flask", "run"]
+# Set the command to run, initializing the DB first
+CMD ["sh", "-c", "flask init-db && flask run"]

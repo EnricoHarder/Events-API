@@ -1,8 +1,6 @@
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
-# pyrefly: ignore [missing-import]
 from flask_jwt_extended import JWTManager
-# pyrefly: ignore [missing-import]
 from flask_swagger_ui import get_swaggerui_blueprint
 from config import Config
 from models import db
@@ -10,84 +8,50 @@ from routes.auth import auth_bp
 from routes.events import events_bp
 from routes.rsvps import rsvps_bp
 from routes.polls import polls_bp
-import yaml
 import os
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    # Initialize extensions
     db.init_app(app)
     CORS(app)
-    jwt = JWTManager(app)
+    JWTManager(app)
     
-    # Swagger UI configuration
-    SWAGGER_URL = '/apidocs'
-    API_URL = '/api/openapi.yaml'
-    
-    swaggerui_blueprint = get_swaggerui_blueprint(
-        SWAGGER_URL,
-        API_URL,
-        config={
-            'app_name': "Evently API"
-        }
-    )
-    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
-    
-    # Serve OpenAPI spec file
-    @app.route('/api/openapi.yaml')
-    def serve_openapi():
-        return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'openapi.yaml')
-    
-    # Register blueprints
+    # Register Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)
     app.register_blueprint(rsvps_bp)
     app.register_blueprint(polls_bp)
-    
-    # Root endpoint
-    @app.route('/', methods=['GET'])
-    def root():
-        return jsonify({
-            'name': 'Evently API',
-            'version': '1.0.0',
-            'description': 'A Flask-based REST API for managing events and RSVPs with different access levels',
-            'documentation': {
-                'swagger_ui': '/apidocs',
-                'openapi_spec': '/api/openapi.yaml'
-            },
-            'endpoints': {
-                'health': '/api/health',
-                'auth': {
-                    'register': '/api/auth/register',
-                    'login': '/api/auth/login'
-                },
-                'events': {
-                    'list': '/api/events',
-                    'get': '/api/events/{id}',
-                    'create': '/api/events'
-                },
-                'rsvps': {
-                    'rsvp': '/api/rsvps/event/{event_id}',
-                    'get_rsvps': '/api/rsvps/event/{event_id}'
-                },
-                'polls': {
-                    'create': '/api/polls'
-                }
-            }
-        }), 200
-    
-    # Health check endpoint
-    @app.route('/api/health', methods=['GET'])
+
+    # Swagger UI configuration
+    SWAGGER_URL = '/apidocs'
+    API_URL = '/api/openapi.yaml'
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL, API_URL, 
+        config={'app_name': "Evently API"}
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+    @app.route('/api/openapi.yaml')
+    def serve_openapi():
+        return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'openapi.yaml')
+
+    @app.route('/api/health')
     def health():
-        return jsonify({'status': 'healthy'}), 200
-    
+        return jsonify({'status': 'healthy'})
+
+    # Define a CLI command to create the database tables
+    @app.cli.command("init-db")
+    def init_db_command():
+        """Creates the database tables."""
+        db.create_all()
+        print("Initialized the database.")
+
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    with app.app_context():
-        db.create_all()
+    # The db.create_all() is now handled by the 'flask init-db' command
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
