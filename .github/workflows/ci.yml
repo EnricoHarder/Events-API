@@ -12,3 +12,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: build Docker image
+        run: |
+          docker build -t events-api:latest
+      - name: Run container
+        run: |
+          docker run -d -p 5000:5000 --name events-api-test polls-api:latest
