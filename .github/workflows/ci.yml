@@ -20,3 +20,14 @@ jobs:
       - name: Run container
         run: |
           docker run -d -p 5000:5000 --name events-api-test events-api:latest
+          for i in {1..20}; do 
+            if curl -fsS http://localhost:5000/api/health; then
+              echo "Health check OK"
+              exit 0
+            fi
+              echo "Waiting for API... ($i)"
+              sleep 1
+          done 
+          echo "Health check failed"
+          docker logs events-api-test || true
+          exit 1
