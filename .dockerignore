@@ -3,7 +3,6 @@
 .gitignore
 .gitattributes
 
-
 # CI
 .codeclimate.yml
 .travis.yml
@@ -75,15 +74,14 @@ target/
 .venv/
 venv/
 
-# PyCharm
-.idea
-
-# Python mode for VIM
-.ropeproject
-**/.ropeproject
-
-# Vim swap files
-**/*.swp
-
-# VS Code
+# IDEs
+.idea/
 .vscode/
+
+# Local Databases
+*.db
+*.sqlite*
+instance/
+
+# Tests
+tests/
