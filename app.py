@@ -13,9 +13,9 @@ from routes.polls import polls_bp
 import yaml
 import os
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
     
     # Initialize extensions
     db.init_app(app)
@@ -45,10 +45,6 @@ def create_app():
     app.register_blueprint(events_bp)
     app.register_blueprint(rsvps_bp)
     app.register_blueprint(polls_bp)
-    
-    # Create tables
-    with app.app_context():
-        db.create_all()
     
     # Root endpoint
     @app.route('/', methods=['GET'])
@@ -91,5 +87,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    with app.app_context():
+        db.create_all()
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)

@@ -1,7 +1,7 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from models import db, Event, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
+from datetime import datetime, timezone
 
 events_bp = Blueprint('events', __name__, url_prefix='/api/events')
 
@@ -14,7 +14,9 @@ def get_events():
 @events_bp.route('/<int:event_id>', methods=['GET'])
 def get_event(event_id):
     """Get a specific event"""
-    event = Event.query.get_or_404(event_id)
+    event = db.session.get(Event, event_id)
+    if event is None:
+        abort(404)
     return jsonify(event.to_dict()), 200
 
 @events_bp.route('', methods=['POST'])
@@ -31,9 +33,10 @@ def create_event():
     
     # Parse date string to datetime
     try:
-        event_date = datetime.fromisoformat(data['date'].replace('Z', '+00:00'))
+        # Ensure the date is timezone-aware
+        event_date = datetime.fromisoformat(data['date']).astimezone(timezone.utc)
     except (ValueError, AttributeError):
-        return jsonify({'error': 'Invalid date format. Use ISO 8601 format (e.g., 2024-01-15T18:00:00)'}), 400
+        return jsonify({'error': 'Invalid date format. Use ISO 8601 format (e.g., 2024-01-15T18:00:00Z)'}), 400
     
     user_id = int(get_jwt_identity())
     
@@ -52,4 +55,3 @@ def create_event():
     db.session.commit()
     
     return jsonify(event.to_dict()), 201
-

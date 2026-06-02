@@ -1,45 +1,4 @@
-from app import create_app
-import pytest
-from datetime import datetime, timedelta
-
-@pytest.fixture
-def client():
-    app = create_app()
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
-
-@pytest.fixture
-def auth_headers(client):
-    """Fixture to provide authentication headers."""
-    client.post("/api/auth/register", json={"username": "testuser", "password": "password"})
-    response = client.post("/api/auth/login", json={"username": "testuser", "password": "password"})
-    token = response.json["access_token"]
-    return {"Authorization": f"Bearer {token}"}
-
-@pytest.fixture
-def created_event(client, auth_headers):
-    """Fixture to create a base event and return its ID."""
-    event_date = datetime.utcnow() + timedelta(days=10)
-    event_data = {
-        "title": "Base Test Event",
-        "date": event_date.isoformat() + "Z",
-        "capacity": 10
-    }
-    response = client.post("/api/events", json=event_data, headers=auth_headers)
-    return response.json["id"]
-
-@pytest.fixture
-def created_private_event(client, auth_headers):
-    """Fixture to create a private event and return its ID."""
-    event_date = datetime.utcnow() + timedelta(days=10)
-    event_data = {
-        "title": "Private Test Event",
-        "date": event_date.isoformat() + "Z",
-        "is_public": False
-    }
-    response = client.post("/api/events", json=event_data, headers=auth_headers)
-    return response.json["id"]
+from datetime import datetime, timedelta, timezone
 
 def test_health_check(client):
     """Test that the health endpoint returns healthy."""
@@ -49,11 +8,11 @@ def test_health_check(client):
 
 def test_create_event(client, auth_headers):
     """Test that a new event can be created with a valid token."""
-    event_date = datetime.utcnow() + timedelta(days=10)
+    event_date = datetime.now(timezone.utc) + timedelta(days=10)
     event_data = {
         "title": "My Test Event",
         "description": "A cool event.",
-        "date": event_date.isoformat() + "Z",
+        "date": event_date.isoformat(),
         "location": "Cyberspace",
         "capacity": 100,
         "is_public": True

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from models import db, Event, RSVP, User
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
@@ -21,7 +21,9 @@ def get_current_user():
 @rsvps_bp.route('/event/<int:event_id>', methods=['POST'])
 def rsvp(event_id):
     """RSVP to an event with different access requirements"""
-    event = Event.query.get_or_404(event_id)
+    event = db.session.get(Event, event_id)
+    if event is None:
+        abort(404)
     data = request.get_json() or {}
     
     user_id, is_admin = get_current_user()
@@ -70,7 +72,9 @@ def rsvp(event_id):
 @rsvps_bp.route('/event/<int:event_id>', methods=['GET'])
 def get_rsvps(event_id):
     """Get all RSVPs for an event"""
-    event = Event.query.get_or_404(event_id)
+    event = db.session.get(Event, event_id)
+    if event is None:
+        abort(404)
     rsvps = RSVP.query.filter_by(event_id=event_id).all()
     
     attending_count = len([r for r in rsvps if r.attending])
@@ -85,4 +89,3 @@ def get_rsvps(event_id):
             'total': len(rsvps)
         }
     }), 200
-
